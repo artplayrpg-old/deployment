@@ -1,0 +1,25 @@
+version: '2'
+
+tasks:
+  dev:
+    cmds:
+      - cp dev.env	.env
+
+  prod:
+    cmds:
+      - cp prod.env	.env
+
+  up:
+    cmds:
+      - |
+        set -e
+        stat .env
+        COMPOSE_CONVERT_WINDOWS_PATHS=1
+        docker-compose up --detach
+
+  down:
+    cmds:
+      - |
+        stat .env
+        COMPOSE_CONVERT_WINDOWS_PATHS=1
+        docker-compose down

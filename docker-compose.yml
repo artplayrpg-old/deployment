@@ -1,0 +1,71 @@
+version: '3.4'
+
+# Microservice template.
+x-template: &service-template
+  restart: always
+  networks:
+    - cnet
+
+# Networks.
+networks:
+  cnet:
+    driver: bridge
+
+# Services.
+services:
+  gamemode:
+    <<: *service-template
+    image: eiskye/art-gamemode:1.0
+    container_name: gamemode
+    ports:
+      # Expose port 7777
+      - "7777:7777/udp"
+    depends_on:
+      # Mark container service 'mysql' as dependency
+      - mysql
+    environment:
+      MYSQL_DATABASE: artplay
+      # Use container name 'mysql' of
+      # container service 'mysql'
+      # as database host
+      MYSQL_HOST: mysql
+      # So you don't have to use root,
+      # but you can if you like
+      MYSQL_USER: "${MYSQL_USER}"
+      # You can use whatever password you like
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
+
+  api:
+    <<: *service-template
+    image: eiskye/art-api:1.0
+    container_name: api
+    ports:
+      - "8081:8081"
+    depends_on:
+      - mysql
+
+  mysql:
+    <<: *service-template
+    image: mysql:8
+    container_name: mysql
+    command:
+      # Disable caching_sha2_password plugin to allow SA-MP server to connect
+      --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_DATABASE: artplay
+      # Password for root access
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+      # So you don't have to use root,
+      # but you can if you like
+      MYSQL_USER: "${MYSQL_USER}"
+      # You can use whatever password you like
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
+    ports:
+      # MySQL Port running inside container
+      - "3306:3306"
+    expose:
+      # Opens port 3306 on the container
+      - "3306"
+      # Where our data will be persisted
+    volumes:
+      - "./data/mysql:/var/lib/mysql"
